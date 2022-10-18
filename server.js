@@ -12,13 +12,14 @@ server.on("connection", function (clientToProxySocket) {
   console.log("Client connected to proxy");
   clientToProxySocket.once("data", function (data) {
     /// Check if the connection is HTTP or HTTPS
-    let isTLSConnection = data.toString().indexOf("CONNECT") !== -1;
+    let isHttpsConnection = data.toString().indexOf("CONNECT") !== -1;
 
+    // Defining variables for later on
     let serverPort = 80;
     let serverAddress;
-
-    if (isTLSConnection) {
-      serverPort = 443;
+    
+    if (isHttpsConnection) {
+      serverPort = 443; /// HTTPS uses 443 as the port to connect
 
       serverAddress = data
         .toString()
@@ -42,7 +43,7 @@ server.on("connection", function (clientToProxySocket) {
     });
 
     /// Stream the data to the server
-    if (isTLSConnection) {
+    if (isHttpsConnection) {
       clientToProxySocket.write("HTTP/1.1 200 OK\r\n\n");
     } else {
       proxyToServerSocket.write(data);
