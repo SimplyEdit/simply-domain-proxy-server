@@ -11,25 +11,28 @@ const dns = require("dns");
 server.on("connection", function (clientToProxySocket) {
   console.log("Client connected to proxy");
   clientToProxySocket.once("data", function (data) {
-    /// Check if the connection is HTTP or HTTPS
+    // Defining variables for later on
+    let serverPort = 80; // HTTP uses as port number
+    let serverAddress;
+
     let isHttpsConnection = data.toString().indexOf("CONNECT") !== -1;
 
-    // Defining variables for later on
-    let serverPort = 80;
-    let serverAddress;
-    
     if (isHttpsConnection) {
-      serverPort = 443; /// HTTPS uses 443 as the port to connect
+      serverPort = 443; /// HTTPS uses 443 as port number
 
+      // Split the address information out of the request
       serverAddress = data
         .toString()
         .split("CONNECT")[1]
         .split(" ")[1]
         .split(":")[0];
     } else {
+      // Filter out the address from the request, no need to change the
+      // serverPort because it is already set to 80
       serverAddress = data.toString().split("Host: ")[1].split("\n")[0];
     }
 
+    // Set a server configuration for astablishing a connection
     let serverConfig = {
       host: serverAddress,
       port: serverPort,
