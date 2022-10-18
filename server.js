@@ -2,8 +2,8 @@ const net = require("net");
 const https = require("node:https");
 const server = net.createServer();
 const config = {
-  host: "167.71.67.112",
-  port: 3000,
+  host: "0.0.0.0",
+  port: 8080,
 };
 const dns = require("dns");
 
