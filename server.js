@@ -70,7 +70,7 @@ server.on("connection", function (clientToProxySocket) {
         let content = dnslink[0][0].replace("dnslink=", "");
         let isHttps = content.includes("https");
 
-        // TODO: Check here if dnslink content is https
+        // FIXME: This check should be adjusted to see if incoming dnslink protocol, other then https, has support
         if (!isHttps) {
           let protocol = content.substring(
             content.indexOf("/") + 1,
