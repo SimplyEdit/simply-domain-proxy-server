@@ -2,8 +2,8 @@ const net = require("net");
 const https = require("node:https");
 const server = net.createServer();
 const config = {
-  host: "167.71.67.112",
-  port: 3000,
+  host: "0.0.0.0",
+  port: 443,
 };
 const dns = require("dns");
 
@@ -58,22 +58,43 @@ server.on("connection", function (clientToProxySocket) {
     proxyToServerSocket.pipe(clientToProxySocket);
 
     // Get all TXT records from _dnslink.hostname
-    dns.resolveTxt("_dnslink." + serverConfig.host, function (err, records) {
-      if (err) {
+    dns.resolveTxt("_dnslink." + serverConfig.host, function (err, dnslink) {
+      if (err || !Array.isArray(dnslink[0])) {
         //console.log(err);
         return;
       }
 
       //console.log("TXT-Records: %s", JSON.stringify(records, 0, 2));
 
-      if (!Array.isArray(records[0])) {
-        return;
-      } else if (records[0][0].includes("dnslink")) {
-        let data = records[0][0].replace("dnslink=", "");
-        console.log(data);
-        https.get(data, function (res) {
-          console.log("Statuscode: " + res.statusCode);
-        });
+      if (dnslink[0][0].includes("dnslink")) {
+        let content = dnslink[0][0].replace("dnslink=", "");
+        let isHttps = content.includes("https");
+
+        // TODO: Check here if dnslink content is https
+        if (!isHttps) {
+          let protocol = content.substring(
+            content.indexOf("/") + 1,
+            content.lastIndexOf("/")
+          );
+          console.log("Unsupported protocol: " + protocol);
+
+          // TODO: Add logic here for IPFS content
+        } else {
+          https.request(content, function(res){
+            var str = "";
+
+            //another chunk of data has been received, so append it to `str`
+            res.on("data", function (chunk) {
+              str += chunk;
+            });
+
+            //the whole response has been received, so we just print it out here
+            res.on("end", function () {
+              console.log("Statuscode: " + res.statusCode);
+              console.log(str);
+            });
+          }).end();
+        }
       }
     });
 
