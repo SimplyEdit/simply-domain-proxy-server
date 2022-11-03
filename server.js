@@ -3,7 +3,7 @@ const https = require("node:https");
 const server = net.createServer();
 const config = {
   host: "0.0.0.0",
-  port: 443,
+  port: 3128,
 };
 const dns = require("dns");
 
@@ -12,7 +12,7 @@ server.on("connection", function (clientToProxySocket) {
   console.log("Client connected to proxy");
   clientToProxySocket.once("data", function (data) {
     // Defining variables for later on
-    let serverPort = 80; // HTTP uses as port number
+    let serverPort;
     let serverAddress;
 
     let isHttpsConnection = data.toString().indexOf("CONNECT") !== -1;
@@ -29,6 +29,7 @@ server.on("connection", function (clientToProxySocket) {
     } else {
       // Filter out the address from the request, no need to change the
       // serverPort because it is already set to 80
+      serverPort = 80;
       serverAddress = data.toString().split("Host: ")[1].split("\n")[0];
     }
 
