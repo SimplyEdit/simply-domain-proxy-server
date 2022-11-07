@@ -7,7 +7,7 @@ const dns = require("dns");
 server.on("request", function (requestFromClient, res) {
   const urlToServer = new URL(
     requestFromClient.url,
-    `http://${requestFromClient.headers.host}`
+    requestFromClient.headers.host
   );
 
   console.log("Request Host name - " + requestFromClient.headers.host);
