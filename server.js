@@ -1,9 +1,9 @@
 const http = require("http");
 const https = require("https");
 const config = {
-  host: "0.0.0.0",
-  port: 3128
-}
+  host: process.env.NODE_HOST || "0.0.0.0",
+  port: process.env.NODE_PORT || 3128,
+};
 const dns = require("dns");
 
 const server = http.createServer((requestFromClient, res) => {
