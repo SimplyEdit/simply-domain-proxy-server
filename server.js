@@ -1,12 +1,15 @@
 const http = require("http");
 const https = require("https");
-const port = 3128;
+const config = {
+  host: "0.0.0.0",
+  port: 3128
+}
 const dns = require("dns");
 
 const server = http.createServer((requestFromClient, res) => {
   const urlToServer = new URL(
     requestFromClient.url,
-    ///"http://" + requestFromClient.headers.host - for localhost
+    ///"http://" + requestFromClient.headers.host /// for localhost
     requestFromClient.headers.host
   );
 
@@ -70,9 +73,10 @@ const server = http.createServer((requestFromClient, res) => {
       }
     }
   });
-}).listen(port, function () {
-  console.log(`Server listening to port ${port}`);
 })
+.listen(config, function () {
+  console.log(`Server listening to port ${config.port}`);
+});
 
 // server.on("request", function (requestFromClient, res) {
 //   const urlToServer = new URL(
