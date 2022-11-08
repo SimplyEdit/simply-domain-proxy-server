@@ -1,6 +1,6 @@
 const http = require("http");
 const https = require("https");
-const server = https.createServer();
+const server = http.createServer();
 const port = 3128;
 const dns = require("dns");
 
