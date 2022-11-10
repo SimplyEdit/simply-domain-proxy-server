@@ -2,15 +2,15 @@ const http = require("http");
 const https = require("https");
 const config = {
   host: process.env.NODE_HOST || "0.0.0.0",
-  port: process.env.NODE_PORT || 3128,
+  port: process.env.NODE_PORT || 3000,
 };
 const dns = require("dns");
 
 const server = http.createServer((requestFromClient, res) => {
   const urlToServer = new URL(
     requestFromClient.url,
-    ///"http://" + requestFromClient.headers.host /// for localhost
-    requestFromClient.headers.host
+    "http://" + requestFromClient.headers.host /// for localhost
+    ///requestFromClient.headers.host
   );
 
   console.log("Request Host name - " + requestFromClient.headers.host);
@@ -25,19 +25,10 @@ const server = http.createServer((requestFromClient, res) => {
     if (dnslink[0][0].includes("dnslink")) {
       const content = dnslink[0][0].replace("dnslink=", "");
       let isHttps = content.includes("https");
+      let isHttp = content.includes("http");
 
       // FIXME: This check should be adjusted to see if incoming dnslink protocol, other then https, has support
-      if (!isHttps) {
-        let protocol = content.substring(
-          content.indexOf("/") + 1,
-          content.lastIndexOf("/")
-        );
-        console.log("Unsupported protocol: " + protocol);
-        return;
-        // TODO: Add logic here for IPFS content
-      } else {
-        //return content;
-
+      if (isHttps || isHttp) {
         console.log("Retrieved dnslink url - " + content);
 
         urlToServer.host = setHostAndPortHandler(content);
@@ -70,6 +61,14 @@ const server = http.createServer((requestFromClient, res) => {
             });
           });
         }
+      } else {
+        let protocol = content.substring(
+          content.indexOf("/") + 1,
+          content.lastIndexOf("/")
+        );
+        console.log("Unsupported protocol: " + protocol);
+        return;
+        // TODO: Add logic here for IPFS content
       }
     }
   });
