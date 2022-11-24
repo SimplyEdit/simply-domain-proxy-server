@@ -13,7 +13,7 @@ const server = http.createServer((requestFromClient, res) => {
     requestFromClient.headers.host
   );
 
-  console.log("Request Host name - " + requestFromClient.headers.host);
+  console.log("Request Host name - " + requestFromClient.headers['x-forwarded-host']);
 
   // Get all TXT records from _dnslink.hostname
   dns.resolveTxt("_dnslink." + "akdev.nl", function (err, dnslink) {
