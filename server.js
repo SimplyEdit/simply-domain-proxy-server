@@ -9,14 +9,13 @@ const dns = require("dns");
 const server = http.createServer((requestFromClient, res) => {
   const urlToServer = new URL(
     requestFromClient.url,
-    ///"http://" + requestFromClient.headers.host /// for localhost
-    requestFromClient.headers.host
+    "http://" + requestFromClient.headers.host
   );
 
   console.log("Request Host name - " + requestFromClient.headers['x-forwarded-host']);
 
   // Get all TXT records from _dnslink.hostname
-  dns.resolveTxt("_dnslink." + "akdev.nl", function (err, dnslink) {
+  dns.resolveTxt("_dnslink." + requestFromClient.headers['x-forwarded-host'], function (err, dnslink) {
     if (err || !Array.isArray(dnslink[0])) {
       //console.log(err);
       return;
