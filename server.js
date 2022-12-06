@@ -1,5 +1,3 @@
-//const http = require("http");
-//const https = require("https");
 const { http, https } = require('follow-redirects');
 const config = {
   host: process.env.NODE_HOST || "0.0.0.0",
@@ -8,12 +6,10 @@ const config = {
 const dns = require("dns");
 
 const server = http.createServer((requestFromClient, res) => {
-  const urlToServer = new URL(
+  let urlToServer = new URL(
     requestFromClient.url,
     "http://" + requestFromClient.headers.host
   );
-  
-  console.log(requestFromClient.url);
 
   console.log("Request Host name - " + requestFromClient.headers['x-forwarded-host']);
 
@@ -33,10 +29,7 @@ const server = http.createServer((requestFromClient, res) => {
       if (isHttps || isHttp) {
         console.log("Retrieved dnslink url - " + content);
 
-        urlToServer.host = setHostAndPortHandler(content);
-        urlToServer.protocol = setProtocolHandler(content);
-        
-        ///console.log(urlToServer);
+        urlToServer = setUrlObjHandler(content);
 
         if (urlToServer.protocol === "https:") {
           https.get(urlToServer, (responseFromServerToClient) => {
@@ -58,7 +51,7 @@ const server = http.createServer((requestFromClient, res) => {
             responseFromServerToClient.on("data", (chunk) =>
               buffer.push(chunk)
             );
-          
+
             responseFromServerToClient.on("end", () => {
               res.write(Buffer.concat(buffer));
               res.end();
@@ -81,27 +74,16 @@ const server = http.createServer((requestFromClient, res) => {
   console.log(`Server listening to port ${config.port}`);
 });
 
-function setHostAndPortHandler(url) {
+function setUrlObjHandler(url) {
   let urlObj = new URL(url);
   let isHttps = url.includes("https");
-  const host = urlObj.host.replace("www.", "");
 
   if (!isHttps) {
     console.log("Is not https");
-    return host.concat(":80");
+    return urlObj;
   } else {
     console.log("Is https");
-    return host.concat(":443");
-  }
-}
-
-function setProtocolHandler(url) {
-  let isHttps = url.includes("https");
-
-  if (!isHttps) {
-    return "http:";
-  } else {
-    return "https:";
+    return urlObj;
   }
 }
 
