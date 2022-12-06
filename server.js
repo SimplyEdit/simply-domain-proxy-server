@@ -1,5 +1,6 @@
-const http = require("http");
-const https = require("https");
+//const http = require("http");
+//const https = require("https");
+const { http, https } = require('follow-redirects');
 const config = {
   host: process.env.NODE_HOST || "0.0.0.0",
   port: process.env.NODE_PORT || 3000,
@@ -11,6 +12,8 @@ const server = http.createServer((requestFromClient, res) => {
     requestFromClient.url,
     "http://" + requestFromClient.headers.host
   );
+  
+  console.log(requestFromClient.url);
 
   console.log("Request Host name - " + requestFromClient.headers['x-forwarded-host']);
 
@@ -32,6 +35,8 @@ const server = http.createServer((requestFromClient, res) => {
 
         urlToServer.host = setHostAndPortHandler(content);
         urlToServer.protocol = setProtocolHandler(content);
+        
+        ///console.log(urlToServer);
 
         if (urlToServer.protocol === "https:") {
           https.get(urlToServer, (responseFromServerToClient) => {
@@ -53,7 +58,7 @@ const server = http.createServer((requestFromClient, res) => {
             responseFromServerToClient.on("data", (chunk) =>
               buffer.push(chunk)
             );
-
+          
             responseFromServerToClient.on("end", () => {
               res.write(Buffer.concat(buffer));
               res.end();
