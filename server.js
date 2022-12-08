@@ -29,7 +29,8 @@ const server = http.createServer((requestFromClient, res) => {
       if (isHttps || isHttp) {
         console.log("Retrieved dnslink url - " + content);
 
-        urlToServer = setUrlObjHandler(content);
+        urlToServer.host = setHostHandler(content);
+        console.log(urlToServer);
 
         if (urlToServer.protocol === "https:") {
           https.get(urlToServer, (responseFromServerToClient) => {
@@ -74,16 +75,17 @@ const server = http.createServer((requestFromClient, res) => {
   console.log(`Server listening to port ${config.port}`);
 });
 
-function setUrlObjHandler(url) {
+function setHostHandler(url) {
   let urlObj = new URL(url);
   let isHttps = url.includes("https");
+  const host = urlObj.host.replace("www.", "");
 
   if (!isHttps) {
     console.log("Is not https");
-    return urlObj;
+    return host.concat(":80");
   } else {
     console.log("Is https");
-    return urlObj;
+    return host.concat(":443");
   }
 }
 
