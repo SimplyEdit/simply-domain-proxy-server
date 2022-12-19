@@ -5,14 +5,17 @@ const config = {
 };
 const dns = require("dns");
 
+function getProxyProtocol(dnslink) {
+  if (dnslink.includes("https")) {
+    return "https";
+  }
+  if (dnslink.includes("http")) {
+    return "http";
+  }
+  // FIXME: Add other types here: ipfs, hyper, etc;
+}
+
 const server = http.createServer((requestFromClient, res) => {
-  let urlToServer = new URL(
-    requestFromClient.url,
-    "http://" + requestFromClient.headers.host
-  );
-
-  console.log("Request Host name - " + requestFromClient.headers['x-forwarded-host']);
-
   // Get all TXT records from _dnslink.hostname
   dns.resolveTxt("_dnslink." + requestFromClient.headers['x-forwarded-host'], function (err, dnslink) {
     if (err || !Array.isArray(dnslink[0])) {
@@ -21,31 +24,19 @@ const server = http.createServer((requestFromClient, res) => {
     }
 
     if (dnslink[0][0].includes("dnslink")) {
+      const requestedUrl = requestFromClient.url;
+      console.log("Requested URL from client: " + requestedUrl);
+      
       const content = dnslink[0][0].replace("dnslink=", "");
-      let isHttps = content.includes("https");
-      let isHttp = content.includes("http");
+      console.log("Retrieved dnslink url - " + content);
 
-      // FIXME: This check should be adjusted to see if incoming dnslink protocol, other then https, has support
-      if (isHttps || isHttp) {
-        console.log("Retrieved dnslink url - " + content);
-
-        urlToServer.host = setHostHandler(content);
-        console.log(urlToServer);
-
-        if (urlToServer.protocol === "https:") {
-          https.get(urlToServer, (responseFromServerToClient) => {
-            const buffer = [];
-
-            responseFromServerToClient.on("data", (chunk) =>
-              buffer.push(chunk)
-            );
-
-            responseFromServerToClient.on("end", () => {
-              res.write(Buffer.concat(buffer));
-              res.end();
-            });
-          });
-        } else {
+      let targetUrl = content + requestFromClient.url;
+      let proxyProtocol = getProxyProtocol(content);
+      let urlToServer;
+      console.log("Detected target protocol: " + proxyProtocol);      
+      switch (proxyProtocol) {
+        case "http":
+          urlToServer = new URL(targetUrl);
           http.get(urlToServer, (responseFromServerToClient) => {
             const buffer = [];
 
@@ -58,15 +49,25 @@ const server = http.createServer((requestFromClient, res) => {
               res.end();
             });
           });
-        }
-      } else {
-        let protocol = content.substring(
-          content.indexOf("/") + 1,
-          content.lastIndexOf("/")
-        );
-        console.log("Unsupported protocol: " + protocol);
-        return;
-        // TODO: Add logic here for IPFS content
+        break;
+        case "https":
+          urlToServer = new URL(targetUrl);
+          https.get(urlToServer, (responseFromServerToClient) => {
+            const buffer = [];
+
+            responseFromServerToClient.on("data", (chunk) =>
+              buffer.push(chunk)
+            );
+
+            responseFromServerToClient.on("end", () => {
+              res.write(Buffer.concat(buffer));
+              res.end();
+            });
+          });
+        break;
+        default:
+          throw new Exception("Unhandled proxy type");
+        break;
       }
     }
   });
