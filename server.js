@@ -30,7 +30,7 @@ const server = http.createServer((requestFromClient, res) => {
       const content = dnslink[0][0].replace("dnslink=", "");
       console.log("Retrieved dnslink url - " + content);
 
-      let targetUrl = content + requestFromClient.url;
+      let targetUrl = content + requestFromClient.url.replace(/^\//, '');
       let proxyProtocol = getProxyProtocol(content);
       let urlToServer;
       console.log("Detected target protocol: " + proxyProtocol);      
@@ -39,6 +39,11 @@ const server = http.createServer((requestFromClient, res) => {
           urlToServer = new URL(targetUrl);
           http.get(urlToServer, (responseFromServerToClient) => {
             const buffer = [];
+
+            // FIXME: what other headers would we need to map?
+            if (typeof responseFromServerToClient.headers['content-type'] !== "undefined") {
+              res.setHeader('Content-Type', responseFromServerToClient.headers['content-type']);
+            }
 
             responseFromServerToClient.on("data", (chunk) =>
               buffer.push(chunk)
@@ -54,6 +59,11 @@ const server = http.createServer((requestFromClient, res) => {
           urlToServer = new URL(targetUrl);
           https.get(urlToServer, (responseFromServerToClient) => {
             const buffer = [];
+
+            // FIXME: what other headers would we need to map?
+            if (typeof responseFromServerToClient.headers['content-type'] !== "undefined") {
+              res.setHeader('Content-Type', responseFromServerToClient.headers['content-type']);
+            }
 
             responseFromServerToClient.on("data", (chunk) =>
               buffer.push(chunk)
